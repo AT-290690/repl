@@ -345,10 +345,10 @@ negotiator@0.6.3:
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.3.tgz#58e323a72fedc0d6f9cd4d31fe49f51479590ccd"
   integrity sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==
 
-node-lisper@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/node-lisper/-/node-lisper-1.0.3.tgz#146c6f49ef3f8c4fbe7e198381cfe6f98022b9e1"
-  integrity sha512-nXmoGxoKT7TQptRLV7sF/Nm+y1tXoDDx4mdO4jmhQWpA5JihBPw/KUycejo5Wt+LIi/AxWjTmUCbF37F3kmQKw==
+node-lisper@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/node-lisper/-/node-lisper-1.0.4.tgz#3401cfdbbf02c7d3319896281b8e782625caaa31"
+  integrity sha512-9hjLUfd2nthXRRf1LIKROHOpFwf2p/NFHWgjig3p8b1kd1a21UfyUFeXTOrP8VVM8hX7kyiL7+weUEqDkyzy6w==
 
 object-assign@^4:
   version "4.1.1"

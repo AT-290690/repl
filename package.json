@@ -1,7 +1,7 @@
 {
   "type": "module",
   "dependencies": {
-    "node-lisper": "^1.0.3",
+    "node-lisper": "^1.0.4",
     "express": "^4.17.1",
     "socket.io": "^4.7.1"
   },
