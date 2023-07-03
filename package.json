@@ -10,5 +10,9 @@
   },
   "scripts": {
     "start": "node index.js"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
   }
 }
