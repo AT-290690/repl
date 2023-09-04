@@ -59,10 +59,10 @@ mongodb@^6.0.0:
     bson "^6.0.0"
     mongodb-connection-string-url "^2.6.0"
 
-node-lisper@^1.2.7:
-  version "1.2.7"
-  resolved "https://registry.yarnpkg.com/node-lisper/-/node-lisper-1.2.7.tgz#48685bcfc9108355abaec7a9ff03cfb0c086abc5"
-  integrity sha512-p7VtEHgDfeIH8KdzM7HGbJYSdTKETwUT463m3GqoZ/Vj5C+oa2Rh53dUqlrdtxlwtm3Ye9yWNeiPrCPCS2pgSA==
+node-lisper@^1.2.8:
+  version "1.2.8"
+  resolved "https://registry.yarnpkg.com/node-lisper/-/node-lisper-1.2.8.tgz#2b28401fb68a1580c6296a800c8f2c707310166c"
+  integrity sha512-xv/2hUSOIRto65EWxEuAdEGyu3lj51+OUyq43OsV7tWB+6fPlmHI/rwr3TptUkfVBV+SBhOI3rH2oyENsJvGUg==
 
 punycode@^2.1.1:
   version "2.3.0"
