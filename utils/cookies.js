@@ -39,9 +39,10 @@ class CookieJar {
     return [...this.#cookies.values()]
   }
   components(cookie) {
-    return cookie.split('.')
+    return cookie?.split('.') ?? CookieJar.InvalidCookie
   }
-  isCookieVerified(cookie, dir) {
+  static InvalidCookie = ['Invaid Cookie id', 'Invalid Cookie value']
+  static IsCookieVerified(cookie, dir) {
     if (!cookie) return false
     const [id, value] = this.components(cookie)
     const current = this.get(id)

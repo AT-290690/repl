@@ -117,7 +117,7 @@ router['GET /ls'] = async (
   res,
   { query: { skip, limit, title, portal }, cookie }
 ) => {
-  // if (!cookieJar.isCookieVerified(cookie, query.dir)) {
+  // if (!CookieJar.isCookieVerified(cookie, query.dir)) {
   //   res.writeHead(403, { 'Content-Type': 'text/html' });
   //   res.end('403: Unauthorized!');
   //   return;
@@ -133,7 +133,7 @@ router['GET /ls'] = async (
   res.end(JSON.stringify(scripts))
 }
 router['GET /script'] = async (req, res, { query }) => {
-  // if (!cookieJar.isCookieVerified(cookie, query.dir)) {
+  // if (!CookieJar.isCookieVerified(cookie, query.dir)) {
   //   res.writeHead(403, { 'Content-Type': 'text/html' });
   //   res.end('403: Unauthorized!');
   //   return;
@@ -148,7 +148,7 @@ router['GET /script'] = async (req, res, { query }) => {
   res.end(result.script)
 }
 router['POST /save'] = async (req, res, { cookie }) => {
-  // if (!cookieJar.isCookieVerified(cookie, query.portal)) {
+  // if (!CookieJar.isCookieVerified(cookie, query.portal)) {
   //   res.writeHead(403, { 'Content-Type': 'text/html' })
   //   res.end('403: Unauthorized!')
   //   return
