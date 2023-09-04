@@ -277,36 +277,36 @@ document.addEventListener('keydown', (e) => {
     e = e || window.event
     e.preventDefault()
     e.stopPropagation()
-    if (!lastCmds.length) lastCmds.push(';; exe')
+    checkToggles()
+    if (!lastCmds.length) return withCommand('exe')
     lastCmds.forEach((cmd) => withCommand(cmd))
+    lastCmds.length = 0
   } else if (e.key === 'Escape') {
     e.preventDefault()
     e.stopPropagation()
   }
 })
-toggleAppMode.addEventListener('click', (e) => {
-  const state = +e.target.getAttribute('toggled')
-  e.target.setAttribute('toggled', state ^ 1)
-  lastCmds[0] = state ? 'focus' : 'app'
-  e.target.style.opacity = state ? 0.25 : 1
-})
-
+const checkToggles = () => {
+  if (+toggleLogMode.getAttribute('toggled')) lastCmds.push('log')
+  if (+toggleShareMode.getAttribute('toggled')) lastCmds.push('link')
+  if (+toggleAppMode.getAttribute('toggled')) lastCmds.push('app')
+}
 toggleLogMode.addEventListener('click', (e) => {
   const state = +e.target.getAttribute('toggled')
   e.target.setAttribute('toggled', state ^ 1)
-  lastCmds[1] = !state ? 'log' : ''
   e.target.style.opacity = state ? 0.25 : 1
 })
-// togglePrettyMode.addEventListener('click', (e) => {
-//   const state = +e.target.getAttribute('toggled')
-//   e.target.setAttribute('toggled', state ^ 1)
-//   lastCmds[2] = !state ? ';; pretty' : ''
-//   e.target.style.opacity = state ? 0.25 : 1
-// })
+
 toggleShareMode.addEventListener('click', (e) => {
   const state = +e.target.getAttribute('toggled')
   e.target.setAttribute('toggled', state ^ 1)
-  lastCmds[2] = !state ? 'link' : ''
+  e.target.style.opacity = state ? 0.25 : 1
+})
+
+toggleAppMode.addEventListener('click', (e) => {
+  const state = +e.target.getAttribute('toggled')
+  e.target.setAttribute('toggled', state ^ 1)
+  if (state) withCommand('focus')
   e.target.style.opacity = state ? 0.25 : 1
 })
 editor.focus()
