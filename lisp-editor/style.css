@@ -51,24 +51,29 @@ body {
 }
 
 #console {
+  position: absolute;
+  left: 0px;
+  padding-inline-start: 75px;
   width: fit-content;
-  color: var(--operator);
+  color: white;
   background-color: transparent;
   border: none;
-  margin-left: 10px;
-  margin-top: 10px;
-  font-size: 16px;
-  font-family: 'Fantastic';
-
-  /* border-top: solid 1px red; */
+  /* border: solid 1px red; */
 }
 
 #editor-container {
   z-index: 1;
-  /* border-top: solid 1px var(--border); */
+  border-top: solid 1px var(--border);
   /* border-bottom: solid 1px var(--border); */
 }
-
+@keyframes fadeOutOpacity {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 .svgIcon:active {
   transform: scale(1.2);
 }
@@ -113,14 +118,29 @@ body {
   background-color: transparent;
   z-index: 1003;
 }
+.droneIcon,
+#drone {
+  cursor: pointer;
+  top: 5px;
+  left: 5px;
+  text-align: center;
+  background-color: transparent;
+  position: fixed;
+  z-index: 1000;
+}
+.droneIcon {
+  /* bottom: 50px;
+  left: 0px; */
+  left: 30px;
+  visibility: hidden;
+}
 
 .cm-editor {
   border: none;
   padding-inline-start: 2px;
   font-size: 16px;
-
-  border-bottom: 1px solid var(--border);
-  /* border-bottom: none; */
+  /* border-bottom: 1px solid var(--border);
+  border-bottom: none; */
 }
 .header-button {
   cursor: pointer;
@@ -128,6 +148,27 @@ body {
   border: none;
 }
 
+@keyframes fadeInOpacity {
+  0% {
+    width: 15%;
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+    width: 15%;
+  }
+}
+@keyframes float {
+  0% {
+    transform: translatey(0px);
+  }
+  50% {
+    transform: translatey(-6px);
+  }
+  100% {
+    transform: translatey(0px);
+  }
+}
 .cm-panels,
 .cm-search {
   background-color: transparent !important;
