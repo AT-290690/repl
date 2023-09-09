@@ -76,7 +76,7 @@ lispLandExtension.env['load-script'] = (args, env) => {
 lispLandExtension.env['login'] = (args, env) => {
   if (args.length !== 2)
     throw new RangeError('Invalid number of arguments to (login) [2 required]')
-  const portal = evaluate(args[0], env)
+  const username = evaluate(args[0], env)
   const password = evaluate(args[1], env)
   editor.setValue('')
   fetch(`${location.origin}/login`, {
@@ -86,31 +86,38 @@ lispLandExtension.env['login'] = (args, env) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      portal,
+      username,
       password,
     }),
   })
 }
 lispLandExtension.env['register'] = (args, env) => {
-  if (args.length)
+  if (args.length !== 2)
     throw new RangeError(
-      'Invalid number of arguments to (register) [0 required]'
+      'Invalid number of arguments to (register) [2 required]'
     )
   editor.setValue('')
+  const [username, password] = args.map((x) => evaluate(x, env))
   fetch(`${location.origin}/register`, {
     method: 'POST',
     headers: {
       credentials: 'same-origin',
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      username,
+      password,
+    }),
   })
     .then((data) => data.text())
-    .then((creds) => creds.split('.'))
-    .then(([portal, password]) => {
-      localStorage.setItem('portal', portal)
-      editor.setValue(`portal: ${portal}\npassword: ${password}`)
-      // localStorage.setItem('password', password)
-    })
+    .then((message) => editor.setValue(message))
+    .catch((error) => editor.setValue(error))
+  // .then((creds) => creds.split('.'))
+  // .then(([portal, password]) => {
+  //   localStorage.setItem('portal', portal)
+  //   editor.setValue(`portal: ${portal}\npassword: ${password}`)
+  //   // localStorage.setItem('password', password)
+  // })
 }
 lispLandExtension.env['log'] = (args, env) => {
   if (!args.length)

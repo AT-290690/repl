@@ -1,6 +1,7 @@
 import { readFile } from 'fs/promises'
 import { brotliCompress } from 'zlib'
 import path from 'path'
+import bcrypt from 'bcrypt'
 import { cookieJar, cookieRecepie } from './cookies.js'
 export const db = {
   tables: {
@@ -15,6 +16,21 @@ const compress = (data) =>
       error ? reject(error) : resolve(buffer)
     )
   )
+const createCookie = (res) => {
+  const { id, value } = cookieRecepie()
+  const maxAge = 60 * 60 * 4
+  const cookie = {
+    id,
+    value,
+    maxAge,
+  }
+  cookieJar.set(id, cookie)
+  res.writeHead(200, {
+    'Content-Type': 'application/text',
+    'Set-Cookie': `_portal=${id}.${value}; Max-Age=${maxAge}; Path=/; HttpOnly; SameSite=Strict; Secure`,
+  })
+  return cookie
+}
 
 const types = {
   md: 'application/text',
@@ -37,16 +53,12 @@ const types = {
   bit: 'application/txt',
 }
 
-const getReqData = (req) =>
+const parseBody = (req) =>
   new Promise((resolve, reject) => {
     try {
       let body = ''
-      req.on('data', (chunk) => {
-        body += chunk.toString()
-      })
-      req.on('end', () => {
-        resolve(body)
-      })
+      req.on('data', (chunk) => (body += chunk.toString()))
+      req.on('end', () => resolve(JSON.parse(body)))
     } catch (error) {
       reject(error)
     }
@@ -60,20 +72,12 @@ const router = {
 }
 // const sanitizePath = path => path.replaceAll('../', '');
 router['POST /login'] = async (req, res) => {
-  const { portal, password } = JSON.parse(await getReqData(req))
-  const account = await db.tables.portals.findOne({ portal, password })
-  if (account) {
-    const maxAge = 60 * 60 * 4
-    const cookie = {
-      id: portal,
-      value: password,
-      maxAge,
-    }
-    cookieJar.set(portal, cookie)
-    res.writeHead(200, {
-      'Content-Type': 'application/text',
-    })
-    res.end(portal)
+  const { username, password } = await parseBody(req)
+  const account = await db.tables.portals.findOne({ username })
+  const isValid = await bcrypt.compare(password, account.password)
+  if (account && isValid) {
+    createCookie(res)
+    res.end(account.portal)
   } else {
     res.writeHead(404, {
       'Content-Type': 'application/text',
@@ -82,20 +86,23 @@ router['POST /login'] = async (req, res) => {
   }
 }
 router['POST /register'] = async (req, res) => {
-  const creds = cookieRecepie()
-  const maxAge = 60 * 60 * 4
-  const cookie = {
-    id: creds.id,
-    value: creds.value,
-    maxAge,
+  const { username, password } = await parseBody(req)
+  const exists = await db.tables.portals.findOne({ username })
+  if (exists) {
+    res.writeHead(405, {
+      'Content-Type': 'application/text',
+    })
+    return res.end(`Username ${username} already taken`)
   }
-  cookieJar.set(creds.id, cookie)
-  res.writeHead(200, {
-    'Content-Type': 'application/text',
-    'Set-Cookie': `_portal=${creds.id}.${creds.value}; Max-Age=${maxAge}; Path=/; HttpOnly; SameSite=Strict; Secure`,
+  createCookie(res)
+  await db.tables.portals.insertOne({
+    username,
+    password: await bcrypt
+      .genSalt(10)
+      .then((salt) => bcrypt.hash(password, salt)),
   })
-  await db.tables.portals.insertOne({ portal: creds.id, password: creds.value })
-  res.end(`${creds.id}.${creds.value}`)
+  // `${creds.id}.${creds.value}`
+  res.end()
 }
 router['GET /portal'] = async (_, res) => {
   const creds = cookieRecepie()
@@ -155,7 +162,7 @@ router['POST /save'] = async (req, res, { cookie }) => {
   // }
   const [portal] = cookieJar.components(cookie)
   if (cookieJar.has(portal)) {
-    const { title, script } = JSON.parse(await getReqData(req))
+    const { title, script } = await parseBody(req)
     await db.tables.scripts.findOneAndUpdate({
       title,
       script,

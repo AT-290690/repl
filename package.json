@@ -1,9 +1,10 @@
 {
   "type": "module",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "dotenv": "^16.3.1",
     "mongodb": "^6.0.0",
-    "node-lisper": "^1.2.10"
+    "node-lisper": "^1.2.11"
   },
   "scripts": {
     "start": "node index.js"

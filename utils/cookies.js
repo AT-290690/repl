@@ -51,5 +51,4 @@ class CookieJar {
 }
 
 const cookieJar = new CookieJar()
-
 export { cookieJar, parseCookies, cookieRecepie }

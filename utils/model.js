@@ -35,8 +35,8 @@ export const init = async () => {
     }
     const portals = {
       collection: instance.db('lisper').collection('portals'),
-      insertOne: async ({ portal, password }) => {
-        const query = { portal, password }
+      insertOne: async ({ username, password }) => {
+        const query = { username, password }
         try {
           await portals.collection.insertOne(query)
         } catch (error) {}
