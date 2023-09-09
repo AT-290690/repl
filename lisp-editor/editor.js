@@ -6,12 +6,20 @@ import { CodeMirror } from './wisp.editor.bundle.js'
 import { parse } from '../node_modules/node-lisper/src/parser.js'
 import std from '../node_modules/node-lisper/lib/baked/std.js'
 import math from '../node_modules/node-lisper/lib/baked/math.js'
+import ds from '../node_modules/node-lisper/lib/baked/ds.js'
 import dom from './baked-dom.js'
 const libraries = {
   std,
   math,
   dom,
+  ds,
 }
+const libs = [
+  ...libraries['std'],
+  ...libraries['math'],
+  ...libraries['ds'],
+  ...libraries['dom'],
+]
 const consoleElement = document.getElementById('console')
 const editorContainer = document.getElementById('editor-container')
 const droneButton = document.getElementById('drone')
@@ -144,15 +152,7 @@ const execute = async (source) => {
     consoleElement.classList.remove('error_line')
     if (!source.trim()) return
 
-    const result = run(
-      [
-        ...libraries['std'],
-        ...libraries['math'],
-        ...libraries['dom'],
-        ...parse(source),
-      ],
-      lispLandExtension.env
-    )
+    const result = run([...libs, ...parse(source)], lispLandExtension.env)
     droneButton.classList.remove('shake')
     errorIcon.style.visibility = 'hidden'
     droneIntel(execIcon)
