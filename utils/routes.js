@@ -141,11 +141,13 @@ router['GET /script'] = async (req, res, { query }) => {
   const result = await db.tables.scripts.findOne(query)
   if (result == null) {
     res.writeHead(404, { 'Content-Type': 'application/text' })
-    res.end('')
-    return
+    return res.end('No script found')
   }
-  res.writeHead(200, { 'Content-Type': 'application/text' })
-  res.end(result.script)
+  res.writeHead(200, {
+    'Content-Type': 'application/text',
+    'Content-Encoding': 'br',
+  })
+  res.end(await compress(result.script))
 }
 
 router['GET /pages'] = async (req, res, { query }) => {

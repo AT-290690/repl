@@ -1,10 +1,10 @@
 import { evaluate } from '../node_modules/node-lisper/src/interpreter.js'
-
 export const lispLandExtension = {
   Extensions: {
     ':parent': (...args) => `$parent_node(${args.join(',')});`,
     ':document': () => 'document;',
     ':body': () => 'document.body;',
+    ':head': () => 'document.head;',
     ':get-style': (...args) => `$get_style(${args.join(',')});`,
     ':set-style': (...args) => `$set_style(${args.join(',')});`,
     ':get-text-content': (...args) => `$get_text_content(${args.join(',')});`,
@@ -106,6 +106,12 @@ export const lispLandExtension = {
   },
   env: {
     [':body']: () => {
+      const mock = { style: {} }
+      mock.appendChild = (child) => (child.parent = mock)
+      mock.removeChild = (child) => (child.parent = null)
+      return mock
+    },
+    [':head']: () => {
       const mock = { style: {} }
       mock.appendChild = (child) => (child.parent = mock)
       mock.removeChild = (child) => (child.parent = null)
