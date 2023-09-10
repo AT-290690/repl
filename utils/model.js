@@ -33,17 +33,17 @@ export const init = async () => {
           .project({ _id: 0, script: 0 })
           .toArray(),
     }
-    const portals = {
-      collection: instance.db('lisper').collection('portals'),
+    const users = {
+      collection: instance.db('lisper').collection('users'),
       insertOne: async ({ username, password }) => {
         const query = { username, password }
         try {
-          await portals.collection.insertOne(query)
+          await users.collection.insertOne(query)
         } catch (error) {}
       },
-      findOne: async (query) => await portals.collection.findOne(query),
+      findOne: async (query) => await users.collection.findOne(query),
     }
-    return { scripts, portals }
+    return { scripts, users }
     // mongoScripts.deleteOne = async query => {
     //   try {
     //     const record = await mongoScripts.findOneFromScripts(query);

@@ -8,6 +8,7 @@ import std from '../node_modules/node-lisper/lib/baked/std.js'
 import math from '../node_modules/node-lisper/lib/baked/math.js'
 import ds from '../node_modules/node-lisper/lib/baked/ds.js'
 import dom from './baked-dom.js'
+import { validPassword } from '../utils/validation.js'
 const libraries = {
   std,
   math,
@@ -92,7 +93,6 @@ lispLandExtension.env['login'] = (args, env) => {
     throw new RangeError('Invalid number of arguments to (login) [2 required]')
   const username = evaluate(args[0], env)
   const password = evaluate(args[1], env)
-  editor.setValue('')
   fetch(`${location.origin}/login`, {
     method: 'POST',
     headers: {
@@ -112,8 +112,22 @@ lispLandExtension.env['register'] = (args, env) => {
     throw new RangeError(
       'Invalid number of arguments to (register) [2 required]'
     )
-  editor.setValue('')
-  const [username, password] = args.map((x) => evaluate(x, env))
+  const [username, password] = args
+    .map((x) => evaluate(x, env))
+    .map((t) => {
+      if (typeof t !== 'string')
+        throw new TypeError('Username and password must be strings')
+      return t
+    })
+    .map((x) => x.trim())
+
+  if (username.length < 3)
+    throw new RangeError('Username must be at least 3 characters long')
+  if (!validPassword(password))
+    throw new RangeError(
+      'Password needs to be at least 6 characters long and containt at least one Upper and Lower case letter and a number'
+    )
+
   fetch(`${location.origin}/register`, {
     method: 'POST',
     headers: {
@@ -257,21 +271,24 @@ const withCommand = (command) => {
       }
       break
     case 'link':
-      fetch(`${location.origin}/save`, {
-        method: 'POST',
-        headers: {
-          credentials: 'same-origin',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          script: value,
-          title: editor.getLine(0).split('; ').pop() ?? 'Untitled',
-        }),
-      }).finally(() => {
-        consoleEditor.setValue('')
-        toggleShareMode.dispatchEvent(new KeyboardEvent('click'))
-      })
-
+      {
+        const title = editor.getLine(0).split('; ').pop() ?? 'Untitled'
+        fetch(`${location.origin}/save`, {
+          method: 'POST',
+          headers: {
+            credentials: 'same-origin',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            script: value,
+            title,
+          }),
+        })
+          .then(() => consoleEditor.setValue(`Script ${title} saved!`))
+          .finally(() =>
+            toggleShareMode.dispatchEvent(new KeyboardEvent('click'))
+          )
+      }
       break
     case 'log':
       {

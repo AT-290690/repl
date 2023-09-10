@@ -4,10 +4,11 @@ import path from 'path'
 import bcrypt from 'bcrypt'
 import { components, cookieRecepie } from './cookies.js'
 import { build } from './pages.js'
+import { validPassword, validUsername } from './validation.js'
 export const db = {
   tables: {
     scripts: { findOne: async () => {}, findMany: async () => {} },
-    portals: { findOne: async () => {}, insertOne: async () => {} },
+    users: { findOne: async () => {}, insertOne: async () => {} },
   },
 }
 const root = './'
@@ -70,7 +71,7 @@ const router = {
 // const sanitizePath = path => path.replaceAll('../', '');
 router['POST /login'] = async (req, res) => {
   const { username, password } = await parseBody(req)
-  const account = await db.tables.portals.findOne({ username })
+  const account = await db.tables.users.findOne({ username })
   if (!account) {
     res.writeHead(405, {
       'Content-Type': 'application/text',
@@ -90,7 +91,13 @@ router['POST /login'] = async (req, res) => {
 }
 router['POST /register'] = async (req, res) => {
   const { username, password } = await parseBody(req)
-  const exists = await db.tables.portals.findOne({ username })
+  if (!validUsername(username) || !validPassword(password)) {
+    res.writeHead(405, {
+      'Content-Type': 'application/text',
+    })
+    return res.end(`Invalid username or password`)
+  }
+  const exists = await db.tables.users.findOne({ username })
   if (exists) {
     res.writeHead(405, {
       'Content-Type': 'application/text',
@@ -98,7 +105,7 @@ router['POST /register'] = async (req, res) => {
     return res.end(`Username ${username} already taken`)
   }
   createCookie(res, username)
-  await db.tables.portals.insertOne({
+  await db.tables.users.insertOne({
     username,
     password: await bcrypt
       .genSalt(10)
@@ -125,7 +132,7 @@ router['POST /register'] = async (req, res) => {
 router['GET /ls'] = async (
   req,
   res,
-  { query: { skip, limit, title, portal }, cookie }
+  { query: { skip, limit, title }, cookie }
 ) => {
   const scripts = await db.tables.scripts.findMany(
     { title: { $regex: title } },
@@ -168,7 +175,6 @@ router['GET /pages'] = async (req, res, { query }) => {
 router['POST /save'] = async (req, res, { cookie }) => {
   if (cookie) {
     const [session, user] = components(cookie)
-    console.log({ session, user })
     const { title, script } = await parseBody(req)
     await db.tables.scripts.findOneAndUpdate({
       title,
