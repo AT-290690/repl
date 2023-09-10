@@ -151,12 +151,16 @@ router['GET /script'] = async (req, res, { query }) => {
 router['GET /pages'] = async (req, res, { query }) => {
   const result = await db.tables.scripts.findOne(query)
   if (result == null) {
-    res.writeHead(404, { 'Content-Type': 'application/text' })
-    res.end('')
-    return
+    res.writeHead(404, {
+      'Content-Type': 'text/html',
+      'Content-Encoding': 'br',
+    })
+    return res.end(
+      await compress(await readFile(path.join(root, '404.html'), 'utf-8'))
+    )
   }
-  res.writeHead(200, { 'Content-Type': 'text/html' })
-  res.end(build(result.script))
+  res.writeHead(200, { 'Content-Type': 'text/html', 'Content-Encoding': 'br' })
+  res.end(await compress(build(result.script)))
 }
 
 router['POST /save'] = async (req, res, { cookie }) => {
