@@ -53,7 +53,7 @@ lispLandExtension.env['list-scripts'] = (args, env) => {
     .then((scripts) =>
       editor.setValue(
         scripts
-          .map(({ title, portal }) => `; (load-script "${title}" "${portal}")`)
+          .map(({ title, user }) => `; (load-script "${title}" "${user}")`)
           .join('\n')
       )
     )
@@ -64,14 +64,28 @@ lispLandExtension.env['load-script'] = (args, env) => {
       'Invalid number of arguments to (load-script) [2 required]'
     )
   const title = evaluate(args[0], env)
-  const portal = evaluate(args[1], env)
+  const user = evaluate(args[1], env)
   editor.setValue('')
-  fetch(`${location.origin}/script?portal=${portal}&title=${title}`)
+  fetch(`${location.origin}/script?user=${user}&title=${title}`)
     .then((raw) => raw.text())
     .then((script) => {
       const existing = editor.getValue().trim()
       editor.setValue(existing ? existing + '\n' : '' + script)
     })
+}
+lispLandExtension.env['share-script'] = (args, env) => {
+  if (args.length !== 2)
+    throw new RangeError(
+      'Invalid number of arguments to (share-script) [2 required]'
+    )
+  const title = evaluate(args[0], env)
+  const user = evaluate(args[1], env)
+
+  window.open(
+    `${location.origin}/pages?user=${user}&title=${title}`,
+    '_blank'
+    // `menubar=no,directories=no,toolbar=no,status=no,scrollbars=no,resize=no,width=600,height=600,left=600,top=150`
+  )
 }
 lispLandExtension.env['login'] = (args, env) => {
   if (args.length !== 2)
@@ -90,6 +104,8 @@ lispLandExtension.env['login'] = (args, env) => {
       password,
     }),
   })
+    .then((res) => res.text())
+    .then((message) => consoleEditor.setValue(message))
 }
 lispLandExtension.env['register'] = (args, env) => {
   if (args.length !== 2)
@@ -110,8 +126,8 @@ lispLandExtension.env['register'] = (args, env) => {
     }),
   })
     .then((data) => data.text())
-    .then((message) => editor.setValue(message))
-    .catch((error) => editor.setValue(error))
+    .then((message) => consoleEditor.setValue(message))
+    .catch((error) => consoleEditor.setValue(error))
   // .then((creds) => creds.split('.'))
   // .then(([portal, password]) => {
   //   localStorage.setItem('portal', portal)
@@ -218,7 +234,7 @@ const withCommand = (command) => {
         const tree = parse(value)
         if (Array.isArray(tree)) {
           const { top, program, deps } = compileToJs(
-            parse(value),
+            tree,
             lispLandExtension.Extensions,
             lispLandExtension.Helpers,
             lispLandExtension.Tops
@@ -333,7 +349,7 @@ consoleEditor.setSize(bounds.width - 80, 40)
 const registerSW = async () => {
   if ('serviceWorker' in navigator)
     try {
-      await navigator.serviceWorker.register('./lisp-editor/sw.js')
+      await navigator.serviceWorker.register('./lisp/sw.js')
     } catch (e) {
       console.log({ e })
       console.log(`SW registration failed`)

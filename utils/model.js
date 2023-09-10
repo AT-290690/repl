@@ -9,9 +9,9 @@ export const init = async () => {
     await instance.connect()
     const scripts = {
       collection: instance.db('lisper').collection('scripts'),
-      findOneAndUpdate: async ({ title, portal, script }) => {
+      findOneAndUpdate: async ({ title, user, script }) => {
         if (script !== null) {
-          const query = { title, portal }
+          const query = { title, user }
           const update = {
             $set: { script },
           }

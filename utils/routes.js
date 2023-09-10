@@ -2,7 +2,8 @@ import { readFile } from 'fs/promises'
 import { brotliCompress } from 'zlib'
 import path from 'path'
 import bcrypt from 'bcrypt'
-import { cookieJar, cookieRecepie } from './cookies.js'
+import { components, cookieRecepie } from './cookies.js'
+import { build } from './pages.js'
 export const db = {
   tables: {
     scripts: { findOne: async () => {}, findMany: async () => {} },
@@ -16,18 +17,14 @@ const compress = (data) =>
       error ? reject(error) : resolve(buffer)
     )
   )
-const createCookie = (res) => {
-  const { id, value } = cookieRecepie()
-  const maxAge = 60 * 60 * 4
+const createCookie = (res, username) => {
   const cookie = {
-    id,
-    value,
-    maxAge,
+    ...cookieRecepie(username),
+    maxAge: 60 * 60 * 4,
   }
-  cookieJar.set(id, cookie)
   res.writeHead(200, {
     'Content-Type': 'application/text',
-    'Set-Cookie': `_portal=${id}.${value}; Max-Age=${maxAge}; Path=/; HttpOnly; SameSite=Strict; Secure`,
+    'Set-Cookie': `_portal=${cookie.id}.${cookie.value}; Max-Age=${cookie.maxAge}; Path=/; HttpOnly; SameSite=Strict; Secure`,
   })
   return cookie
 }
@@ -74,15 +71,21 @@ const router = {
 router['POST /login'] = async (req, res) => {
   const { username, password } = await parseBody(req)
   const account = await db.tables.portals.findOne({ username })
-  const isValid = await bcrypt.compare(password, account.password)
-  if (account && isValid) {
-    createCookie(res)
-    res.end(account.portal)
-  } else {
-    res.writeHead(404, {
+  if (!account) {
+    res.writeHead(405, {
       'Content-Type': 'application/text',
     })
-    res.end(`Account not found`)
+    return res.end(`Wrong username or password`)
+  }
+  const isValid = await bcrypt.compare(password, account.password)
+  if (isValid) {
+    createCookie(res)
+    res.end(`Welcome back ${account.username}`)
+  } else {
+    res.writeHead(405, {
+      'Content-Type': 'application/text',
+    })
+    res.end(`Wrong username or password`)
   }
 }
 router['POST /register'] = async (req, res) => {
@@ -102,33 +105,28 @@ router['POST /register'] = async (req, res) => {
       .then((salt) => bcrypt.hash(password, salt)),
   })
   // `${creds.id}.${creds.value}`
-  res.end()
+  res.end(`Welcome ${username}.`)
 }
-router['GET /portal'] = async (_, res) => {
-  const creds = cookieRecepie()
-  const maxAge = 60 * 60 * 4
-  const cookie = {
-    id: creds.id,
-    value: creds.value,
-    maxAge,
-  }
-  cookieJar.set(creds.id, cookie)
-  res.writeHead(200, {
-    'Content-Type': 'application/text',
-    'Set-Cookie': `_portal=${creds.id}.${creds.value}; Max-Age=${maxAge}; Path=/; HttpOnly; SameSite=Strict; Secure`,
-  })
-  res.end(creds.value)
-}
+// router['GET /portal'] = async (_, res) => {
+//   const creds = cookieRecepie()
+//   const maxAge = 60 * 60 * 4
+//   const cookie = {
+//     id: creds.id,
+//     value: creds.value,
+//     maxAge,
+//   }
+//   cookieJar.set(creds.id, cookie)
+//   res.writeHead(200, {
+//     'Content-Type': 'application/text',
+//     'Set-Cookie': `_portal=${creds.id}.${creds.value}; Max-Age=${maxAge}; Path=/; HttpOnly; SameSite=Strict; Secure`,
+//   })
+//   res.end(creds.value)
+// }
 router['GET /ls'] = async (
   req,
   res,
   { query: { skip, limit, title, portal }, cookie }
 ) => {
-  // if (!CookieJar.isCookieVerified(cookie, query.dir)) {
-  //   res.writeHead(403, { 'Content-Type': 'text/html' });
-  //   res.end('403: Unauthorized!');
-  //   return;
-  // }
   const scripts = await db.tables.scripts.findMany(
     { title: { $regex: title } },
     {
@@ -140,11 +138,6 @@ router['GET /ls'] = async (
   res.end(JSON.stringify(scripts))
 }
 router['GET /script'] = async (req, res, { query }) => {
-  // if (!CookieJar.isCookieVerified(cookie, query.dir)) {
-  //   res.writeHead(403, { 'Content-Type': 'text/html' });
-  //   res.end('403: Unauthorized!');
-  //   return;
-  // }
   const result = await db.tables.scripts.findOne(query)
   if (result == null) {
     res.writeHead(404, { 'Content-Type': 'application/text' })
@@ -154,22 +147,32 @@ router['GET /script'] = async (req, res, { query }) => {
   res.writeHead(200, { 'Content-Type': 'application/text' })
   res.end(result.script)
 }
+
+router['GET /pages'] = async (req, res, { query }) => {
+  const result = await db.tables.scripts.findOne(query)
+  if (result == null) {
+    res.writeHead(404, { 'Content-Type': 'application/text' })
+    res.end('')
+    return
+  }
+  res.writeHead(200, { 'Content-Type': 'text/html' })
+  res.end(build(result.script))
+}
+
 router['POST /save'] = async (req, res, { cookie }) => {
-  // if (!CookieJar.isCookieVerified(cookie, query.portal)) {
-  //   res.writeHead(403, { 'Content-Type': 'text/html' })
-  //   res.end('403: Unauthorized!')
-  //   return
-  // }
-  const [portal] = cookieJar.components(cookie)
-  if (cookieJar.has(portal)) {
+  if (cookie) {
+    const [session, user] = components(cookie)
     const { title, script } = await parseBody(req)
     await db.tables.scripts.findOneAndUpdate({
       title,
       script,
-      portal,
+      user,
     })
     res.writeHead(200, { 'Content-Type': 'application/text' })
-    res.end()
+    res.end('Script saved!')
+  } else {
+    res.writeHead(405, { 'Content-Type': 'application/text' })
+    res.end('Session has expired! Please login.')
   }
 }
 
@@ -177,7 +180,6 @@ router['GET *'] = async (req, res, { pathname }) => {
   const extension = path.extname(pathname).slice(1)
   const type = extension ? types[extension] : types.html
   const supportedExtension = Boolean(type)
-
   if (!supportedExtension) {
     res.writeHead(404, { 'Content-Type': 'text/html' })
     res.end('405: Unsupported file format')
