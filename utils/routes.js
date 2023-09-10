@@ -79,7 +79,7 @@ router['POST /login'] = async (req, res) => {
   }
   const isValid = await bcrypt.compare(password, account.password)
   if (isValid) {
-    createCookie(res)
+    createCookie(res, account.username)
     res.end(`Welcome back ${account.username}`)
   } else {
     res.writeHead(405, {
@@ -97,7 +97,7 @@ router['POST /register'] = async (req, res) => {
     })
     return res.end(`Username ${username} already taken`)
   }
-  createCookie(res)
+  createCookie(res, username)
   await db.tables.portals.insertOne({
     username,
     password: await bcrypt
@@ -168,6 +168,7 @@ router['GET /pages'] = async (req, res, { query }) => {
 router['POST /save'] = async (req, res, { cookie }) => {
   if (cookie) {
     const [session, user] = components(cookie)
+    console.log({ session, user })
     const { title, script } = await parseBody(req)
     await db.tables.scripts.findOneAndUpdate({
       title,

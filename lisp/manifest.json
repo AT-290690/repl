@@ -1,11 +1,11 @@
 {
-  "name": "HLP",
-  "short_name": "HLP",
-  "start_url": "./index.html",
+  "name": "LP-R",
+  "short_name": "LP-R",
+  "start_url": "../index.html",
   "display": "standalone",
   "background_color": "#565f89",
   "theme_color": "#565f89",
-  "description": "Hyper Link Program",
+  "description": "Lisper Repl",
   "icons": [
     {
       "src": "./assets/images/icon-512.png",

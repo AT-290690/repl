@@ -163,6 +163,8 @@ export const lispLandExtension = {
       const type = evaluate(args[0], env)
       if (typeof type !== 'string')
         throw new TypeError('First argument of (:element) is not a string')
+      if (type === 'script' || type === 'iframe')
+        throw new TypeError(`${type} is a forbidden element at (:element)`)
       const mock = { value: '', textContent: '', style: {} }
       mock.appendChild = (child) => (child.parent = mock)
       mock.removeChild = (child) => (child.parent = null)
