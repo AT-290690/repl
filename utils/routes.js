@@ -48,7 +48,7 @@ const types = {
   text: 'application/text',
   txt: 'application/text',
   xml: 'application/xml',
-  bit: 'application/txt',
+  lisp: 'application/text',
 }
 
 const parseBody = (req) =>

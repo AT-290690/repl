@@ -300,10 +300,10 @@ node-fetch@^2.6.7:
   dependencies:
     whatwg-url "^5.0.0"
 
-node-lisper@^1.2.12:
-  version "1.2.12"
-  resolved "https://registry.yarnpkg.com/node-lisper/-/node-lisper-1.2.12.tgz#f8adb8df9f4ab05d0a16142a7a5234bea605ae29"
-  integrity sha512-hYGv3UZcvNCOV1WMIsv5YRdG/osXKx3rcAaBXrHrz+3+PHrCzKaLBO8QA+8A63rhZR+Iu3wdX2A2OP8dJnWsVA==
+node-lisper@^1.2.13:
+  version "1.2.13"
+  resolved "https://registry.yarnpkg.com/node-lisper/-/node-lisper-1.2.13.tgz#0a246f75596d8d47eb79f93e3ffc1b19021e2778"
+  integrity sha512-YNGqCBYUQqE6vRgmuUPnlJ+Da3Sz6f6b7zS5t7x7fTEI7RePhQWijms7Y6DOqkGI+V2+fvf4IxoUejwNOZUgCw==
 
 nopt@^5.0.0:
   version "5.0.0"

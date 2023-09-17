@@ -28,6 +28,8 @@ const errorIcon = document.getElementById('error-drone-icon')
 const execIcon = document.getElementById('exec-drone-icon')
 const toggleAppMode = document.getElementById('toggle-app-mode')
 const toggleLogMode = document.getElementById('toggle-log-mode')
+const toggleCompileMode = document.getElementById('toggle-compile-mode')
+
 // const togglePrettyMode = document.getElementById('toggle-pretty-mode')
 const toggleShareMode = document.getElementById('toggle-share-mode')
 const consoleEditor = CodeMirror(consoleElement)
@@ -149,13 +151,9 @@ lispLandExtension.env['register'] = (args, env) => {
   //   // localStorage.setItem('password', password)
   // })
 }
-lispLandExtension.env['log'] = (args, env) => {
-  if (!args.length)
-    throw new RangeError('Invalid number of arguments to (log) [>= 1 required]')
-  const expressions = args.map((x) => evaluate(x, env))
-
+globalThis.log = (args) => {
   const current = consoleEditor.getValue()
-  const msg = expressions.at(-1)
+  const msg = args.at(-1)
   consoleEditor.setValue(
     `${current ? `${current}\n` : ''}${
       msg !== undefined
@@ -181,15 +179,42 @@ lispLandExtension.env['log'] = (args, env) => {
         : 'void'
     }`
   )
-
   return msg
 }
-const execute = async (source) => {
+lispLandExtension.env['console-log'] = (args, env) => {
+  if (!args.length)
+    throw new RangeError('Invalid number of arguments to (log) [>= 1 required]')
+  const expressions = args.map((x) => evaluate(x, env))
+  return log(expressions)
+}
+lispLandExtension.Helpers.consoleLog = {
+  source: `consoleLog = (...args) => globalThis.log(args)`,
+}
+const compileAndEval = (source) => {
+  const tree = parse(source)
+  if (Array.isArray(tree)) {
+    const { top, program, deps } = compileToJs(
+      tree,
+      lispLandExtension.Extensions,
+      lispLandExtension.Helpers,
+      lispLandExtension.Tops
+    )
+    return eval(
+      `${top}${treeShake(
+        deps,
+        JSON.parse(JSON.stringify(Object.values(libraries)))
+      )}${program}`
+    )
+  }
+}
+
+const execute = async (source, compile = 0) => {
   try {
     consoleElement.classList.remove('error_line')
     if (!source.trim()) return
-
-    const result = run([...libs, ...parse(source)], lispLandExtension.env)
+    const result = compile
+      ? compileAndEval(source)
+      : run([...libs, ...parse(source)], lispLandExtension.env)
     droneButton.classList.remove('shake')
     errorIcon.style.visibility = 'hidden'
     droneIntel(execIcon)
@@ -295,20 +320,27 @@ const withCommand = (command) => {
         consoleEditor.setValue('')
         const selection = editor.getSelection().trim()
         if (selection) {
-          const out = `(log ${selection})`
+          const out = `(console-log ${selection})`
           editor.replaceSelection(out)
 
-          execute(`${editor.getValue().trim()}`)
+          execute(
+            `${editor.getValue().trim()}`,
+            +toggleCompileMode.getAttribute('toggled')
+          )
           editor.setValue(value)
 
           // }
-        } else execute(`(log ${value})`)
+        } else
+          execute(
+            `(console-log ${value})`,
+            +toggleCompileMode.getAttribute('toggled')
+          )
       }
       break
     case 'exe':
     default:
       consoleEditor.setValue('')
-      execute(value)
+      execute(value, +toggleCompileMode.getAttribute('toggled'))
       break
   }
 }
@@ -336,14 +368,20 @@ toggleLogMode.addEventListener('click', (e) => {
   e.target.setAttribute('toggled', state ^ 1)
   e.target.style.opacity = state ? 0.25 : 1
 })
-
+toggleCompileMode.addEventListener('click', (e) => {
+  if (+toggleAppMode.getAttribute('toggled')) return
+  const state = +e.target.getAttribute('toggled')
+  e.target.setAttribute('toggled', state ^ 1)
+  e.target.style.opacity = state ? 0.25 : 1
+})
 toggleShareMode.addEventListener('click', (e) => {
   const state = +e.target.getAttribute('toggled')
   e.target.setAttribute('toggled', state ^ 1)
   e.target.style.opacity = state ? 0.25 : 1
 })
-
 toggleAppMode.addEventListener('click', (e) => {
+  if (+toggleCompileMode.getAttribute('toggled'))
+    toggleCompileMode.dispatchEvent(new KeyboardEvent('click'))
   const state = +e.target.getAttribute('toggled')
   e.target.setAttribute('toggled', state ^ 1)
   if (state) withCommand('focus')
