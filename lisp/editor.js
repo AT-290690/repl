@@ -190,6 +190,8 @@ lispLandExtension.env['console-log'] = (args, env) => {
 lispLandExtension.Helpers.consoleLog = {
   source: `consoleLog = (...args) => globalThis.log(args)`,
 }
+lispLandExtension.Extensions['console-log'] = (...args) =>
+  `consoleLog(${args.join(',')});`
 const compileAndEval = (source) => {
   const tree = parse(source)
   if (Array.isArray(tree)) {
@@ -199,12 +201,12 @@ const compileAndEval = (source) => {
       lispLandExtension.Helpers,
       lispLandExtension.Tops
     )
-    return eval(
-      `${top}${treeShake(
-        deps,
-        JSON.parse(JSON.stringify(Object.values(libraries)))
-      )}${program}`
-    )
+
+    const JavaScript = `${top}${treeShake(
+      deps,
+      JSON.parse(JSON.stringify(Object.values(libraries)))
+    )}${program}`
+    return eval(JavaScript)
   }
 }
 
