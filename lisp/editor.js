@@ -1,9 +1,15 @@
 import { compileToJs } from '../node_modules/node-lisper/src/compiler.js'
 import { evaluate, run } from '../node_modules/node-lisper/src/interpreter.js'
-import { treeShake } from '../node_modules/node-lisper/src/utils.js'
+import {
+  handleUnbalancedParens,
+  handleUnbalancedQuotes,
+  removeNoCode,
+  treeShake,
+} from '../node_modules/node-lisper/src/utils.js'
 import { lispLandExtension } from './extensions.js'
 import { CodeMirror } from './wisp.editor.bundle.js'
 import { parse } from '../node_modules/node-lisper/src/parser.js'
+import str from '../node_modules/node-lisper/lib/baked/str.js'
 import std from '../node_modules/node-lisper/lib/baked/std.js'
 import math from '../node_modules/node-lisper/lib/baked/math.js'
 import ds from '../node_modules/node-lisper/lib/baked/ds.js'
@@ -11,12 +17,14 @@ import dom from './baked-dom.js'
 import { validPassword } from '../utils/validation.js'
 const libraries = {
   std,
+  str,
   math,
   dom,
   ds,
 }
 const libs = [
   ...libraries['std'],
+  ...libraries['str'],
   ...libraries['math'],
   ...libraries['ds'],
   ...libraries['dom'],
@@ -193,7 +201,9 @@ lispLandExtension.Helpers.consoleLog = {
 lispLandExtension.Extensions['console-log'] = (...args) =>
   `consoleLog(${args.join(',')});`
 const compileAndEval = (source) => {
-  const tree = parse(source)
+  const tree = parse(
+    handleUnbalancedQuotes(handleUnbalancedParens(removeNoCode(source)))
+  )
   if (Array.isArray(tree)) {
     const { top, program, deps } = compileToJs(
       tree,
@@ -272,7 +282,9 @@ const withCommand = (command) => {
         const application = document.getElementById('application')
         const script = document.createElement('script')
 
-        const tree = parse(value)
+        const tree = parse(
+          handleUnbalancedQuotes(handleUnbalancedParens(removeNoCode(value)))
+        )
         if (Array.isArray(tree)) {
           const { top, program, deps } = compileToJs(
             tree,
