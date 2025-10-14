@@ -25,6 +25,7 @@ const makeEditor = (el, theme) => {
 };
 const THEME = "terminal";
 const editor = makeEditor("editor", THEME);
+const files = makeEditor("files", THEME);
 const terminal = makeEditor("terminal", THEME);
 terminal.renderer.setShowGutter(false);
 terminal.setValue("; To run press cmd/ctrl + S or the run button");
@@ -85,11 +86,28 @@ document.addEventListener("keydown", (e) => {
   if (e.key.toLowerCase() === "s" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
     e.preventDefault();
     e.stopPropagation();
-    const value = editor.getValue();
-    if (value.trim()) {
-      comp(value);
-      link(value);
-      terminal.clearSelection();
+    if (files.isFocused()) {
+      const value = files.getValue();
+      if (value.trim()) {
+        fetch("/api/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + HASH,
+          },
+          body: JSON.stringify({
+            filename: fileNameInput.value,
+            content: value,
+          }),
+        });
+      }
+    } else if (editor.isFocused()) {
+      const value = editor.getValue();
+      if (value.trim()) {
+        comp(value);
+        link(value);
+        terminal.clearSelection();
+      }
     }
   }
 });
@@ -105,27 +123,99 @@ document.addEventListener("keydown", (e) => {
     }
   }
 });
-document.getElementById("run").addEventListener("click", () => {
-  const value = editor.getValue();
-  if (value.trim()) {
-    comp(value);
-    link(value);
-    terminal.clearSelection();
-  }
-});
-document.getElementById("check").addEventListener("click", () => {
-  const value = editor.getValue();
-  if (value.trim()) {
-    type(value);
-    link(value);
-    terminal.clearSelection();
-  }
-});
+// document.getElementById("run").addEventListener("click", () => {
+//   const value = editor.getValue();
+//   if (value.trim()) {
+//     comp(value);
+//     link(value);
+//     terminal.clearSelection();
+//   }
+// });
+// document.getElementById("check").addEventListener("click", () => {
+//   const value = editor.getValue();
+//   if (value.trim()) {
+//     type(value);
+//     link(value);
+//     terminal.clearSelection();
+//   }
+// });
 // document.getElementById("js").addEventListener("click", () => {
 //   const value = editor.getValue();
 //   if (value.trim()) {
 //     javascript(value);
 //     link(value);
 //     terminal.clearSelection();
+//   }
+// });
+
+const fileNameInput = document.getElementById("filename");
+fileNameInput.addEventListener("keyup", (e) => {
+  if (e.key === "Enter") {
+    fetch(`./portals/${HASH}/${e.target.value}`)
+      .then((x) => x.text())
+      .then((x) => files.setValue(x));
+  }
+});
+
+// document.addEventListener("keydown", (e) => {
+//   if (e.key.toLowerCase() === "s" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+//     e.preventDefault();
+//     e.stopPropagation();
+//     const value = editor.getValue();
+//     if (value.trim()) {
+//       // terminal.setValue(`[${[...value].map((x) => x.charCodeAt()).join(" ")}]`);
+//       fetch("/api/save", {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: "Bearer " + HASH,
+//         },
+//         body: JSON.stringify({
+//           filename: fileNameInput.value,
+//           content: value,
+//         }),
+//       });
+//     }
+//   }
+// });
+// document.getElementById("save").addEventListener("click", () => {
+//   const value = editor.getValue();
+//   if (value.trim()) {
+//     const value = editor.getValue();
+//     if (value.trim()) {
+//       fetch("/api/save", {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: "Bearer " + HASH,
+//         },
+//         body: JSON.stringify({
+//           filename: fileNameInput.value,
+//           content: value,
+//         }),
+//       });
+//     }
+//   }
+// });
+
+// document.getElementById("char").addEventListener("click", (e) => {
+//   const value = editor.getValue();
+//   if (value.trim()) {
+//     const value = editor.getValue();
+//     if (value.trim()) {
+//       if (e.target.textContent === "char") {
+//         editor.setValue(`[${[...value].map((x) => x.charCodeAt()).join(" ")}]`);
+//         e.target.textContent = "text";
+//       } else {
+//         editor.setValue(
+//           value
+//             .slice(1, -1)
+//             .split(" ")
+//             .map((x) => String.fromCharCode(x))
+//             .join("")
+//         );
+//         e.target.textContent = "char";
+//       }
+//     }
 //   }
 // });
