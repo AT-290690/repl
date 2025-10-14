@@ -1,0 +1,96 @@
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height"
+  />
+  <meta name="description" content="Write and run Resin programs" />
+  <title>Lamb</title>
+  <link rel="icon" type="image/x-icon" href="./logo-lamb.png" />
+  <style>
+    html {
+      background-color: black;
+    }
+    .ace_comment {
+      color: #7285b2aa !important;
+    }
+    @font-face {
+      font-family: "Fantastic";
+      src: url(./FantasqueSansMono-Regular.ttf) format("truetype");
+      font-display: swap;
+    }
+    * {
+      font-family: "Fantastic" !important;
+    }
+    #editor {
+      height: 99%;
+      width: 100%;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #save {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      width: 64px;
+      height: 32px;
+    }
+    #char {
+      position: absolute;
+      bottom: 5px;
+      right: 70px;
+      width: 64px;
+      height: 32px;
+    }
+    #filename {
+      position: absolute;
+      top: 10px;
+      right: 5px;
+      background-color: transparent;
+      border: none;
+      color: rgb(255, 255, 255);
+      width: fit-content;
+      text-align: right;
+    }
+    button {
+      background-color: black;
+      border: steelblue 1px solid;
+      cursor: pointer;
+      color: rgb(255, 255, 255);
+    }
+    button:active {
+      transform: scale(1.1);
+    }
+    button:hover {
+      background-color: steelblue;
+      border: rgb(140, 255, 73) 1px solid;
+    }
+    button:active {
+      background-color: rgb(140, 255, 73);
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <div id="editor"></div>
+  <script
+    defer
+    src="//ajaxorg.github.io/ace-builds/src-min-noconflict/ace.js"
+    type="text/javascript"
+    charset="utf-8"
+  ></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"
+    integrity="sha512-qtX0GLM3qX8rxJN1gyDfcnMFFrKvixfoEOwbBib9VafR5vbChV5LeE5wSI/x+IlCkTY5ZFddFDCCfaVJJNnuKQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <input id="filename" value="input.txt" />
+  <button id="save" title="save file"><span>save</span></button>
+  <button id="char" title="char code"><span>char</span></button>
+
+  <script type="module" src="./editor.js"></script>
+</body>

@@ -1,0 +1,1 @@
+[PushInt(1), PushInt(2), PushInt(3), PushInt(4), PushInt(5), PushInt(6), MakeVector(6), StoreVar("*INPUT*"), PushInt(0)]
