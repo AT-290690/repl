@@ -1,9 +1,15 @@
 import express from "express";
-import { exec, comp, check, cons } from "../pkg/node/fez_rs.js";
+import {
+  get_output_len,
+  __wasm,
+  cons,
+  comp,
+  exec,
+} from "../pkg/node/fez_rs.js";
 import { writeFile, mkdir } from "fs";
 import { readFile } from "fs/promises";
 import path from "path";
-
+const memory = __wasm.memory;
 const router = express.Router();
 
 const convertToString = (xs) =>
@@ -32,9 +38,20 @@ const partition = (xs) =>
   }, []);
 const getHash = (req) => req.headers.authorization.split("Bearer ")[1];
 // import { readFileSync, writeFileSync } from "fs";
+
+const readWasmString = (ptr, len) =>
+  new TextDecoder().decode(new Uint8Array(memory.buffer, ptr, len));
+
+const runCons = (a, b) => readWasmString(cons(a, b), get_output_len());
+
+const runExec = (program) => readWasmString(exec(program), get_output_len());
+
+const runComp = (program) => readWasmString(comp(program), get_output_len());
+
 const removeTest = (src) => src.replace(/; --.*?; --.*?\n?/gs, "");
 const merge = (input, ...programms) =>
-  programms.reduce((a, b) => cons(a, b), input);
+  programms.reduce((a, b) => runCons(a, b), input);
+
 const toCharCodeVector = (str) => [...str].map((x) => x.charCodeAt()).join(" ");
 router.post("/save", async (req, res) => {
   const dir = `./public/portals/${getHash(req)}`;
@@ -56,22 +73,23 @@ router.post("/init", async (req, res) => {
 router.post("/run", async (req, res) => {
   const dir = `./public/portals/${getHash(req)}`;
   const input = await readFile(`${dir}/input.txt`, "utf-8");
-  for (const [file, content] of partition(
-    parse(
-      exec(
-        merge(
-          comp(`(let *INPUT* [${toCharCodeVector(input)}])`),
-          comp(removeTest(req.body))
-        )
-      )
-    )
-  )) {
+  // for (const [key, value] of Object.entries(process.memoryUsage())) {
+  //   console.log(`Memory usage by ${key}, ${value / 1000000}MB `);
+  // }
+  // console.log("\n");
+  const inp = runComp(`(let *INPUT* [${toCharCodeVector(input)}])`);
+  const prog = runComp(removeTest(req.body));
+  const out = runExec(merge(inp, prog));
+  for (const [file, content] of partition(parse(out))) {
     writeFileEnsured(
       `${dir}/${convertToString(file)}`,
       convertToString(content)
     );
   }
-
+  // for (const [key, value] of Object.entries(process.memoryUsage())) {
+  //   console.log(`Memory usage by ${key}, ${value / 1000000}MB `);
+  // }
+  // console.log("\n");
   res.status(200).json({ success: true });
 });
 

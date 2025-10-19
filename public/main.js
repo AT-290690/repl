@@ -1,5 +1,29 @@
-import init, { run, check, js } from "./web/fez_rs.js";
-init();
+import init, {
+  //   exec,
+  //   comp,
+  //   cons,
+  run,
+  // check,
+  // js,
+  get_output_len,
+} from "./pkg/web/fez_rs.js";
+let wasm;
+(async () => {
+  wasm = await init();
+})();
+const readWasmString = (ptr, len) =>
+  new TextDecoder().decode(new Uint8Array(wasm.memory.buffer, ptr, len));
+// Use these
+// const typeCheck = (program) => readWasmString(check(program), get_output_len());
+// const compileJs = (program) => readWasmString(js(program), get_output_len());
+// const compileBiteCode = (program) =>
+//   readWasmString(comp(program), get_output_len());
+// const execBiteCode = (program) =>
+//   readWasmString(exec(program), get_output_len());
+const typeCheckAndRun = (program) =>
+  readWasmString(run(program), get_output_len());
+// const concatenateBiteCode = (a, b) =>
+//   readWasmString(cons(a, b), get_output_len());
 
 const hasHash = localStorage.getItem("hash");
 const HASH = hasHash ?? crypto.randomUUID();
@@ -59,7 +83,7 @@ const link = (value) => {
   window.history.pushState({ path: newurl }, "", newurl);
 };
 const evaluate = (value) => {
-  const out = run(value);
+  const out = typeCheckAndRun(value);
   if (out && out[0] === '"') {
     terminal.setValue(out.substring(1, out.length - 1));
   } else terminal.setValue(out);
@@ -73,14 +97,6 @@ const comp = (value) => {
     body: value,
   });
 };
-const type = (value) => {
-  const out = check(value);
-  if (out && out[0] === '"') {
-    terminal.setValue(out.substring(1, out.length - 1));
-  } else terminal.setValue(out);
-};
-const javascript = (value) =>
-  terminal.setValue(serialise(new Function(`return ${js(value)}`)()));
 
 document.addEventListener("keydown", (e) => {
   if (e.key.toLowerCase() === "s" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
